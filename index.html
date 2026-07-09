@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>废话转换器 · 把烦恼发射去宇宙</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="stage"></canvas>
+
+<div class="hud">
+  <div class="title">废话转换器 <span>· 把烦恼发射去宇宙</span></div>
+  <div class="counter" id="counter">已发射 0 条烦恼 · 0 颗星</div>
+</div>
+
+<div class="panel">
+  <textarea id="input" maxlength="60" placeholder="输入一句抱怨或吐槽… 例如：又堵车了！"></textarea>
+  <div class="row">
+    <div class="hint">Enter 发射 · Shift+Enter 换行</div>
+    <button class="launch-btn" id="launchBtn">🚀 发射</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
