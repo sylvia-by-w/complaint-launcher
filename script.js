@@ -33,6 +33,8 @@ const PALETTE = ['#ffffff', '#c9b6ff', '#a78bfa', '#7dd3fc', '#f9a8ff', '#fef08a
 let nebulaStars = [];
 let totalChars = 0;
 let totalMsgs = 0;
+const earthImage = new Image();
+earthImage.src = 'assets/earth-realistic.png';
 
 function nebulaCenter() {
   return { x: W * 0.5, y: H * 0.34 };
@@ -105,6 +107,30 @@ function bezierPoint(p0, p1, p2, t) {
 }
 function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
+function drawEarth(center, now) {
+  if (!earthImage.complete) return;
+
+  const earthSize = Math.min(W, H) * 0.28;
+  const bobY = Math.sin(now * 0.0007) * 8;
+  const rotation = now * 0.0002;
+
+  ctx.save();
+  ctx.translate(center.x, center.y + bobY);
+  ctx.rotate(rotation);
+
+  const glow = ctx.createRadialGradient(0, 0, earthSize * 0.08, 0, 0, earthSize * 0.7);
+  glow.addColorStop(0, 'rgba(120, 220, 255, 0.28)');
+  glow.addColorStop(0.45, 'rgba(70, 140, 255, 0.16)');
+  glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(0, 0, earthSize * 0.7, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.drawImage(earthImage, -earthSize / 2, -earthSize / 2, earthSize, earthSize);
+  ctx.restore();
+}
+
 function draw(now) {
   ctx.clearRect(0, 0, W, H);
 
@@ -127,6 +153,7 @@ function draw(now) {
 
   // persistent nebula stars, slowly orbiting
   const center = nebulaCenter();
+  drawEarth(center, now);
   nebulaStars.forEach(s => {
     const ang = s.baseAngle + now * s.angularSpeed;
     const x = center.x + Math.cos(ang) * s.radius;
