@@ -110,30 +110,22 @@ function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 function drawEarth(center, now) {
   if (!earthImage.complete) return;
 
-  const earthSize = Math.min(W, H) * 0.33;
-  const bobY = Math.sin(now * 0.0007) * 6;
-  const pulse = 1 + Math.sin(now * 0.0011) * 0.008;
+  const earthSize = Math.min(W, H) * 0.36;
+  const bobY = Math.sin(now * 0.0007) * 5;
+  const pulse = 1 + Math.sin(now * 0.0011) * 0.006;
 
   ctx.save();
   ctx.translate(center.x, center.y + bobY);
   ctx.scale(pulse, pulse);
 
-  const glow = ctx.createRadialGradient(0, 0, earthSize * 0.1, 0, 0, earthSize * 0.82);
-  glow.addColorStop(0, 'rgba(130, 230, 255, 0.26)');
-  glow.addColorStop(0.5, 'rgba(80, 150, 255, 0.14)');
+  const glow = ctx.createRadialGradient(0, 0, earthSize * 0.08, 0, 0, earthSize * 0.9);
+  glow.addColorStop(0, 'rgba(140, 240, 255, 0.3)');
+  glow.addColorStop(0.5, 'rgba(90, 150, 255, 0.16)');
   glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
   ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.arc(0, 0, earthSize * 0.82, 0, Math.PI * 2);
+  ctx.arc(0, 0, earthSize * 0.9, 0, Math.PI * 2);
   ctx.fill();
-
-  ctx.globalAlpha = 0.22;
-  ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(0, 0, earthSize * 0.5, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.globalAlpha = 1;
 
   ctx.drawImage(earthImage, -earthSize / 2, -earthSize / 2, earthSize, earthSize);
   ctx.restore();
