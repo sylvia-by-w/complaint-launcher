@@ -108,36 +108,55 @@ function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
 function drawEarth(center) {
   ctx.save();
-  const glow = ctx.createRadialGradient(center.x, center.y, 2, center.x, center.y, 90);
-  glow.addColorStop(0, 'rgba(120, 220, 255, 0.35)');
-  glow.addColorStop(0.5, 'rgba(70, 140, 255, 0.18)');
+  const glow = ctx.createRadialGradient(center.x, center.y, 4, center.x, center.y, 120);
+  glow.addColorStop(0, 'rgba(90, 200, 255, 0.42)');
+  glow.addColorStop(0.45, 'rgba(50, 120, 255, 0.24)');
   glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
   ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.arc(center.x, center.y, 92, 0, Math.PI * 2);
+  ctx.arc(center.x, center.y, 122, 0, Math.PI * 2);
   ctx.fill();
 
-  const earthGradient = ctx.createRadialGradient(center.x - 26, center.y - 28, 8, center.x, center.y, 72);
-  earthGradient.addColorStop(0, '#5fb7ff');
-  earthGradient.addColorStop(0.45, '#2f7ee8');
-  earthGradient.addColorStop(1, '#11366d');
+  const earthGradient = ctx.createRadialGradient(center.x - 28, center.y - 30, 8, center.x, center.y, 78);
+  earthGradient.addColorStop(0, '#8fd7ff');
+  earthGradient.addColorStop(0.2, '#4ea3ff');
+  earthGradient.addColorStop(0.5, '#2e7de2');
+  earthGradient.addColorStop(0.8, '#1656a8');
+  earthGradient.addColorStop(1, '#0a2f5d');
   ctx.fillStyle = earthGradient;
   ctx.beginPath();
-  ctx.arc(center.x, center.y, 44, 0, Math.PI * 2);
+  ctx.arc(center.x, center.y, 54, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.strokeStyle = 'rgba(180, 240, 255, 0.25)';
-  ctx.lineWidth = 3;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(180, 240, 255, 0.35)';
+  ctx.lineWidth = 4;
   ctx.beginPath();
-  ctx.arc(center.x, center.y, 46, 0.5, 2.2);
+  ctx.arc(center.x, center.y, 56, 0.3, 2.3);
   ctx.stroke();
-
-  ctx.fillStyle = 'rgba(120, 220, 140, 0.8)';
   ctx.beginPath();
-  ctx.arc(center.x - 6, center.y - 8, 10, 0, Math.PI * 2);
-  ctx.arc(center.x + 10, center.y + 8, 7, 0, Math.PI * 2);
-  ctx.arc(center.x + 2, center.y + 14, 6, 0, Math.PI * 2);
+  ctx.arc(center.x, center.y, 60, 1.2, 2.8);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.fillStyle = 'rgba(120, 220, 140, 0.85)';
+  ctx.beginPath();
+  ctx.arc(center.x - 10, center.y - 8, 12, 0, Math.PI * 2);
+  ctx.arc(center.x + 10, center.y + 8, 9, 0, Math.PI * 2);
+  ctx.arc(center.x + 4, center.y + 14, 8, 0, Math.PI * 2);
   ctx.fill();
+
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, 54, -0.2, 1.2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(center.x, center.y, 54, 1.8, 3.4);
+  ctx.stroke();
+  ctx.restore();
   ctx.restore();
 }
 
@@ -219,12 +238,12 @@ function draw(now) {
       return true;
     } else {
       const orbitIndex = nebulaStars.length;
-      const orbitAngle = (orbitIndex * (Math.PI * 2 / 48)) + (Math.random() - 0.5) * 0.16;
+      const orbitAngle = (orbitIndex * (Math.PI * 2 / 72)) + (Math.random() - 0.5) * 0.12;
       nebulaStars.push({
         baseAngle: orbitAngle,
-        radius: 170 + Math.min(70, orbitIndex * 2.2) + Math.random() * 18,
-        angularSpeed: (Math.random() * 0.00005 + 0.00002) * (Math.random() < 0.5 ? 1 : -1),
-        size: p.size * 0.3,
+        radius: 170 + Math.min(55, orbitIndex * 1.8) + Math.random() * 14,
+        angularSpeed: (Math.random() * 0.00006 + 0.00003) * (Math.random() < 0.5 ? 1 : -1),
+        size: p.size * 0.32,
         color: p.color
       });
       return false;
