@@ -38,6 +38,11 @@ function nebulaCenter() {
   return { x: W * 0.5, y: H * 0.5 };
 }
 
+function getEarthSize() {
+  const base = Math.min(W, H) * 0.32;
+  return Math.max(180, Math.min(280, base));
+}
+
 // ---------- active flying particles ----------
 let particles = [];
 
@@ -107,56 +112,59 @@ function bezierPoint(p0, p1, p2, t) {
 function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
 function drawEarth(center) {
+  const earthSize = getEarthSize();
   ctx.save();
-  const glow = ctx.createRadialGradient(center.x, center.y, 4, center.x, center.y, 120);
-  glow.addColorStop(0, 'rgba(90, 200, 255, 0.42)');
-  glow.addColorStop(0.45, 'rgba(50, 120, 255, 0.24)');
+
+  const glow = ctx.createRadialGradient(center.x, center.y, 6, center.x, center.y, earthSize * 1.15);
+  glow.addColorStop(0, 'rgba(95, 205, 255, 0.42)');
+  glow.addColorStop(0.45, 'rgba(55, 125, 255, 0.24)');
   glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
   ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.arc(center.x, center.y, 122, 0, Math.PI * 2);
+  ctx.arc(center.x, center.y, earthSize * 1.15, 0, Math.PI * 2);
   ctx.fill();
 
-  const earthGradient = ctx.createRadialGradient(center.x - 28, center.y - 30, 8, center.x, center.y, 78);
-  earthGradient.addColorStop(0, '#8fd7ff');
-  earthGradient.addColorStop(0.2, '#4ea3ff');
-  earthGradient.addColorStop(0.5, '#2e7de2');
-  earthGradient.addColorStop(0.8, '#1656a8');
-  earthGradient.addColorStop(1, '#0a2f5d');
+  const earthGradient = ctx.createRadialGradient(center.x - earthSize * 0.28, center.y - earthSize * 0.3, earthSize * 0.12, center.x, center.y, earthSize * 0.78);
+  earthGradient.addColorStop(0, '#9fe7ff');
+  earthGradient.addColorStop(0.18, '#4ea7ff');
+  earthGradient.addColorStop(0.45, '#2f7fe5');
+  earthGradient.addColorStop(0.8, '#155ca7');
+  earthGradient.addColorStop(1, '#08294d');
   ctx.fillStyle = earthGradient;
   ctx.beginPath();
-  ctx.arc(center.x, center.y, 54, 0, Math.PI * 2);
+  ctx.arc(center.x, center.y, earthSize * 0.5, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.save();
-  ctx.strokeStyle = 'rgba(180, 240, 255, 0.35)';
-  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(200, 245, 255, 0.35)';
+  ctx.lineWidth = Math.max(2.5, earthSize * 0.018);
   ctx.beginPath();
-  ctx.arc(center.x, center.y, 56, 0.3, 2.3);
+  ctx.arc(center.x, center.y, earthSize * 0.5 + 2, 0.35, 2.3);
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(center.x, center.y, 60, 1.2, 2.8);
+  ctx.arc(center.x, center.y, earthSize * 0.5 + 6, 1.1, 2.8);
   ctx.stroke();
   ctx.restore();
 
-  ctx.fillStyle = 'rgba(120, 220, 140, 0.85)';
+  ctx.fillStyle = 'rgba(115, 220, 140, 0.9)';
   ctx.beginPath();
-  ctx.arc(center.x - 10, center.y - 8, 12, 0, Math.PI * 2);
-  ctx.arc(center.x + 10, center.y + 8, 9, 0, Math.PI * 2);
-  ctx.arc(center.x + 4, center.y + 14, 8, 0, Math.PI * 2);
+  ctx.arc(center.x - earthSize * 0.08, center.y - earthSize * 0.05, earthSize * 0.08, 0, Math.PI * 2);
+  ctx.arc(center.x + earthSize * 0.08, center.y + earthSize * 0.03, earthSize * 0.06, 0, Math.PI * 2);
+  ctx.arc(center.x + earthSize * 0.02, center.y + earthSize * 0.1, earthSize * 0.055, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.save();
-  ctx.globalAlpha = 0.5;
+  ctx.globalAlpha = 0.55;
   ctx.strokeStyle = 'rgba(255,255,255,0.28)';
-  ctx.lineWidth = 2;
+  ctx.lineWidth = Math.max(1.2, earthSize * 0.008);
   ctx.beginPath();
-  ctx.arc(center.x, center.y, 54, -0.2, 1.2);
+  ctx.arc(center.x, center.y, earthSize * 0.5, -0.25, 1.1);
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(center.x, center.y, 54, 1.8, 3.4);
+  ctx.arc(center.x, center.y, earthSize * 0.5, 1.7, 3.4);
   ctx.stroke();
   ctx.restore();
+
   ctx.restore();
 }
 
