@@ -35,12 +35,7 @@ let totalChars = 0;
 let totalMsgs = 0;
 
 function nebulaCenter() {
-  return { x: W * 0.5, y: H * 0.5 };
-}
-
-function getEarthSize() {
-  const base = Math.min(W, H) * 0.32;
-  return Math.max(180, Math.min(280, base));
+  return { x: W * 0.5, y: H * 0.34 };
 }
 
 // ---------- active flying particles ----------
@@ -56,19 +51,18 @@ function launch() {
   const chars = [...text].filter(c => c.trim().length > 0);
   const rect = input.getBoundingClientRect();
   const center = nebulaCenter();
-  const ringRadius = 150 + Math.min(90, totalChars * 0.12);
-  const ringSpread = (Math.PI * 2) / Math.max(1, chars.length);
+  const spread = 40 + Math.min(260, totalChars * 0.5);
 
   chars.forEach((ch, i) => {
     const startX = rect.left + rect.width * (0.15 + 0.7 * Math.random());
     const startY = rect.top + rect.height * 0.4;
-    const angle = (i * ringSpread) + (Math.random() - 0.5) * 0.35;
-    const radius = ringRadius + Math.random() * 26;
+    const angle = Math.random() * Math.PI * 2;
+    const radius = Math.random() * spread + 20;
     const targetX = center.x + Math.cos(angle) * radius;
     const targetY = center.y + Math.sin(angle) * radius * 0.55;
 
-    const ctrlX = (startX + targetX) / 2 + (Math.random() - 0.5) * 220;
-    const ctrlY = Math.min(startY, targetY) - 170 - Math.random() * 150;
+    const ctrlX = (startX + targetX) / 2 + (Math.random() - 0.5) * 260;
+    const ctrlY = Math.min(startY, targetY) - 160 - Math.random() * 180;
 
     particles.push({
       char: ch,
@@ -111,63 +105,6 @@ function bezierPoint(p0, p1, p2, t) {
 }
 function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
-function drawEarth(center) {
-  const earthSize = getEarthSize();
-  ctx.save();
-
-  const glow = ctx.createRadialGradient(center.x, center.y, 6, center.x, center.y, earthSize * 1.15);
-  glow.addColorStop(0, 'rgba(95, 205, 255, 0.42)');
-  glow.addColorStop(0.45, 'rgba(55, 125, 255, 0.24)');
-  glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-  ctx.fillStyle = glow;
-  ctx.beginPath();
-  ctx.arc(center.x, center.y, earthSize * 1.15, 0, Math.PI * 2);
-  ctx.fill();
-
-  const earthGradient = ctx.createRadialGradient(center.x - earthSize * 0.28, center.y - earthSize * 0.3, earthSize * 0.12, center.x, center.y, earthSize * 0.78);
-  earthGradient.addColorStop(0, '#9fe7ff');
-  earthGradient.addColorStop(0.18, '#4ea7ff');
-  earthGradient.addColorStop(0.45, '#2f7fe5');
-  earthGradient.addColorStop(0.8, '#155ca7');
-  earthGradient.addColorStop(1, '#08294d');
-  ctx.fillStyle = earthGradient;
-  ctx.beginPath();
-  ctx.arc(center.x, center.y, earthSize * 0.5, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.save();
-  ctx.strokeStyle = 'rgba(200, 245, 255, 0.35)';
-  ctx.lineWidth = Math.max(2.5, earthSize * 0.018);
-  ctx.beginPath();
-  ctx.arc(center.x, center.y, earthSize * 0.5 + 2, 0.35, 2.3);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(center.x, center.y, earthSize * 0.5 + 6, 1.1, 2.8);
-  ctx.stroke();
-  ctx.restore();
-
-  ctx.fillStyle = 'rgba(115, 220, 140, 0.9)';
-  ctx.beginPath();
-  ctx.arc(center.x - earthSize * 0.08, center.y - earthSize * 0.05, earthSize * 0.08, 0, Math.PI * 2);
-  ctx.arc(center.x + earthSize * 0.08, center.y + earthSize * 0.03, earthSize * 0.06, 0, Math.PI * 2);
-  ctx.arc(center.x + earthSize * 0.02, center.y + earthSize * 0.1, earthSize * 0.055, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.save();
-  ctx.globalAlpha = 0.55;
-  ctx.strokeStyle = 'rgba(255,255,255,0.28)';
-  ctx.lineWidth = Math.max(1.2, earthSize * 0.008);
-  ctx.beginPath();
-  ctx.arc(center.x, center.y, earthSize * 0.5, -0.25, 1.1);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(center.x, center.y, earthSize * 0.5, 1.7, 3.4);
-  ctx.stroke();
-  ctx.restore();
-
-  ctx.restore();
-}
-
 function draw(now) {
   ctx.clearRect(0, 0, W, H);
 
@@ -188,9 +125,8 @@ function draw(now) {
     ctx.fill();
   });
 
-  // settled stars forming a glowing ring around Earth
+  // persistent nebula stars, slowly orbiting
   const center = nebulaCenter();
-  drawEarth(center);
   nebulaStars.forEach(s => {
     const ang = s.baseAngle + now * s.angularSpeed;
     const x = center.x + Math.cos(ang) * s.radius;
@@ -245,13 +181,11 @@ function draw(now) {
       }
       return true;
     } else {
-      const orbitIndex = nebulaStars.length;
-      const orbitAngle = (orbitIndex * (Math.PI * 2 / 72)) + (Math.random() - 0.5) * 0.12;
       nebulaStars.push({
-        baseAngle: orbitAngle,
-        radius: 170 + Math.min(55, orbitIndex * 1.8) + Math.random() * 14,
-        angularSpeed: (Math.random() * 0.00006 + 0.00003) * (Math.random() < 0.5 ? 1 : -1),
-        size: p.size * 0.32,
+        baseAngle: p.angle,
+        radius: p.radius,
+        angularSpeed: (Math.random() * 0.00006 + 0.00002) * (Math.random() < 0.5 ? 1 : -1),
+        size: p.size * 0.3,
         color: p.color
       });
       return false;
