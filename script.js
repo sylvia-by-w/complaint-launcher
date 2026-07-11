@@ -34,7 +34,7 @@ let nebulaStars = [];
 let totalChars = 0;
 let totalMsgs = 0;
 const earthImage = new Image();
-earthImage.src = 'assets/earth-realistic.png';
+earthImage.src = 'assets/earth.png';
 
 function nebulaCenter() {
   return { x: W * 0.5, y: H * 0.34 };
