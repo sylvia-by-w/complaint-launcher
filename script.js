@@ -53,6 +53,50 @@ function ringBand() {
   return { inner, width };
 }
 
+// ---------- occasional shooting stars, purely decorative ----------
+let shootingStars = [];
+let nextShootAt = performance.now() + 6000 + Math.random() * 8000;
+function maybeSpawnShootingStar(now) {
+  if (now < nextShootAt) return;
+  nextShootAt = now + 14000 + Math.random() * 16000;
+  const fromLeft = Math.random() < 0.5;
+  const startX = fromLeft ? -40 : W + 40;
+  const startY = Math.random() * H * 0.5;
+  const speed = (W + H) * (0.55 + Math.random() * 0.25) / 900;
+  const dir = fromLeft ? 1 : -1;
+  shootingStars.push({
+    x: startX, y: startY,
+    vx: dir * speed, vy: speed * (0.45 + Math.random() * 0.2),
+    len: 90 + Math.random() * 90,
+    start: now,
+    duration: 700 + Math.random() * 300
+  });
+}
+function drawShootingStars(now) {
+  shootingStars = shootingStars.filter(s => {
+    const t = (now - s.start) / s.duration;
+    if (t > 1) return false;
+    const x = s.x + s.vx * (now - s.start);
+    const y = s.y + s.vy * (now - s.start);
+    const angle = Math.atan2(s.vy, s.vx);
+    const fade = t < 0.15 ? t / 0.15 : 1 - (t - 0.15) / 0.85;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    const grad = ctx.createLinearGradient(-s.len, 0, 0, 0);
+    grad.addColorStop(0, 'rgba(255,255,255,0)');
+    grad.addColorStop(1, `rgba(255,255,255,${0.85 * fade})`);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-s.len, 0);
+    ctx.lineTo(0, 0);
+    ctx.stroke();
+    ctx.restore();
+    return true;
+  });
+}
+
 // ---------- active flying particles ----------
 let particles = [];
 
@@ -67,11 +111,18 @@ function launch() {
   const rect = input.getBoundingClientRect();
   const center = nebulaCenter();
   const { inner, width } = ringBand();
+  const batch = totalMsgs;
+  // each message clusters into its own little arc of the ring, spread out in
+  // character order, so a burst reads as a small constellation rather than
+  // scattering fully at random
+  const baseAngle = Math.random() * Math.PI * 2;
+  const angleSpan = Math.min(1.1, 0.18 + chars.length * 0.06);
 
   chars.forEach((ch, i) => {
     const startX = rect.left + rect.width * (0.15 + 0.7 * Math.random());
     const startY = rect.top + rect.height * 0.4;
-    const angle = Math.random() * Math.PI * 2;
+    const t = chars.length > 1 ? i / (chars.length - 1) : 0.5;
+    const angle = baseAngle + (t - 0.5) * angleSpan + (Math.random() - 0.5) * 0.05;
     const radius = inner + Math.random() * width;
     const targetX = center.x + Math.cos(angle) * radius;
     const targetY = center.y + Math.sin(angle) * radius * RING_FLATTEN;
@@ -89,7 +140,7 @@ function launch() {
       rotSpeed: (Math.random() - 0.5) * 6,
       size: 13 + Math.random() * 4,
       color: PALETTE[Math.floor(Math.random() * PALETTE.length)],
-      angle, radius
+      angle, radius, batch, seq: i
     });
   });
 
@@ -99,11 +150,26 @@ function launch() {
   input.value = '';
 }
 
+let counterBumpTimer = null;
 function updateCounter() {
   counterEl.textContent = `已发射 ${totalMsgs} 条烦恼 · ${totalChars} 颗星`;
+  counterEl.classList.add('bump');
+  clearTimeout(counterBumpTimer);
+  counterBumpTimer = setTimeout(() => counterEl.classList.remove('bump'), 400);
 }
 
 launchBtn.addEventListener('click', launch);
+launchBtn.addEventListener('click', e => {
+  const rect = launchBtn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height) * 1.8;
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple';
+  ripple.style.width = ripple.style.height = size + 'px';
+  ripple.style.left = (e.clientX - rect.left) + 'px';
+  ripple.style.top = (e.clientY - rect.top) + 'px';
+  launchBtn.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 650);
+});
 input.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -166,33 +232,63 @@ function draw(now) {
     ctx.fill();
   });
 
+  maybeSpawnShootingStar(now);
+  drawShootingStars(now);
+
   // persistent nebula stars form a ring around the globe; the half of the
   // ring that's "behind" the globe is drawn first, then the globe, then the
-  // near half on top, so the ring appears to pass behind the planet
-  const drawRingStar = s => {
+  // near half on top, so the ring appears to pass behind the planet. depth
+  // (how close to the viewer a point on the ring is) also scales size and
+  // brightness a little, so the ring reads as a tilted circle, not flat dots.
+  const ringPoints = nebulaStars.map(s => {
     const ang = s.baseAngle + now * s.angularSpeed;
-    const x = center.x + Math.cos(ang) * s.radius;
-    const y = center.y + Math.sin(ang) * s.radius * RING_FLATTEN;
-    const twinkle = 0.7 + 0.3 * Math.sin(now * 0.002 + s.baseAngle * 5);
-    ctx.save();
-    ctx.globalAlpha = twinkle;
-    ctx.shadowBlur = 14;
-    ctx.shadowColor = s.color;
-    ctx.fillStyle = s.color;
-    ctx.beginPath();
-    ctx.arc(x, y, s.size, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-    return ang;
+    const depth = (Math.sin(ang) + 1) / 2; // 0 = far/behind, 1 = near/front
+    return {
+      s, ang, depth,
+      x: center.x + Math.cos(ang) * s.radius,
+      y: center.y + Math.sin(ang) * s.radius * RING_FLATTEN,
+      behind: Math.sin(ang) < 0
+    };
+  });
+
+  const drawRingGroup = pts => {
+    // faint constellation lines linking characters launched in the same burst
+    const byBatch = new Map();
+    pts.forEach(p => {
+      if (!byBatch.has(p.s.batch)) byBatch.set(p.s.batch, []);
+      byBatch.get(p.s.batch).push(p);
+    });
+    byBatch.forEach(list => {
+      if (list.length < 2) return;
+      list.sort((a, b) => a.s.seq - b.s.seq);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(200,190,255,0.16)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      list.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    pts.forEach(p => {
+      const s = p.s;
+      const sizeScale = 0.65 + 0.45 * p.depth;
+      const twinkle = (0.55 + 0.35 * p.depth) * (0.85 + 0.15 * Math.sin(now * 0.002 + s.baseAngle * 5));
+      ctx.save();
+      ctx.globalAlpha = twinkle;
+      ctx.shadowBlur = 14 * sizeScale;
+      ctx.shadowColor = s.color;
+      ctx.fillStyle = s.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, s.size * sizeScale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
   };
 
-  nebulaStars.forEach(s => {
-    if (Math.sin(s.baseAngle + now * s.angularSpeed) < 0) drawRingStar(s);
-  });
+  drawRingGroup(ringPoints.filter(p => p.behind));
   drawEarth(center, now);
-  nebulaStars.forEach(s => {
-    if (Math.sin(s.baseAngle + now * s.angularSpeed) >= 0) drawRingStar(s);
-  });
+  drawRingGroup(ringPoints.filter(p => !p.behind));
 
   // active flying particles
   particles = particles.filter(p => {
@@ -237,7 +333,9 @@ function draw(now) {
         radius: p.radius,
         angularSpeed: (Math.random() * 0.00006 + 0.00002) * (Math.random() < 0.5 ? 1 : -1),
         size: p.size * 0.3,
-        color: p.color
+        color: p.color,
+        batch: p.batch,
+        seq: p.seq
       });
       return false;
     }
