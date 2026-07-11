@@ -23,14 +23,14 @@ html, body {
   animation: fadeInDown 0.9s ease both;
 }
 .title {
-  font-size: 18px; font-weight: 600;
+  font-size: 20px; font-weight: 400;
   letter-spacing: 1px;
-  font-family: inherit;
+  font-family: 'ZCOOL KuaiLe', "Microsoft YaHei", sans-serif;
   background: linear-gradient(135deg, #e9e6ff 10%, #c9a8ff 45%, #ff9cf0 90%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
   filter: drop-shadow(0 0 12px rgba(150, 120, 255, 0.5));
 }
-.title span { opacity: 0.65; font-weight: 400; font-size: 13px; }
+.title span { opacity: 0.65; font-weight: 400; font-size: 14px; font-family: 'ZCOOL KuaiLe', "Microsoft YaHei", sans-serif; }
 .counter {
   color: #b8b3e6; font-size: 13px; text-align: right; line-height: 1.6;
   text-shadow: 0 0 8px rgba(120, 100, 255, 0.4);
