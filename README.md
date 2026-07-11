@@ -44,7 +44,7 @@ complaint-launcher/
 ## 以后可以加
 
 - [ ] 发射音效 / 星云背景音乐
-- [ ] 把星云状态存到 localStorage，刷新不丢失
+- [x] 把星云状态存到 localStorage，刷新不丢失
 - [ ] 分享星云截图
 - [ ] 深色/浅色主题切换
 

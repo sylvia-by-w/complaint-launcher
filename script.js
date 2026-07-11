@@ -36,6 +36,29 @@ let totalMsgs = 0;
 const earthImage = new Image();
 earthImage.src = 'assets/earth.png';
 
+// ---------- save / restore the nebula so it survives a refresh ----------
+const STORAGE_KEY = 'complaint-launcher-state-v1';
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ totalChars, totalMsgs, nebulaStars }));
+  } catch (e) {
+    // storage full or unavailable (e.g. private browsing) — just skip saving
+  }
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (typeof data.totalChars === 'number') totalChars = data.totalChars;
+    if (typeof data.totalMsgs === 'number') totalMsgs = data.totalMsgs;
+    if (Array.isArray(data.nebulaStars)) nebulaStars = data.nebulaStars;
+  } catch (e) {
+    // corrupted save data — start fresh rather than crash
+  }
+}
+loadState();
+
 function nebulaCenter() {
   return { x: W * 0.5, y: H * 0.5 };
 }
@@ -147,6 +170,7 @@ function launch() {
   totalChars += chars.length;
   totalMsgs += 1;
   updateCounter();
+  saveState();
   input.value = '';
 }
 
@@ -337,6 +361,7 @@ function draw(now) {
         batch: p.batch,
         seq: p.seq
       });
+      saveState();
       return false;
     }
   });
@@ -344,5 +369,6 @@ function draw(now) {
   requestAnimationFrame(draw);
 }
 
+counterEl.textContent = `已发射 ${totalMsgs} 条烦恼 · ${totalChars} 颗星`;
 resize();
 requestAnimationFrame(draw);
