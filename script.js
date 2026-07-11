@@ -37,7 +37,7 @@ const earthImage = new Image();
 earthImage.src = 'assets/earth.png';
 
 function nebulaCenter() {
-  return { x: W * 0.5, y: H * 0.34 };
+  return { x: W * 0.5, y: H * 0.5 };
 }
 
 // ---------- active flying particles ----------
@@ -118,24 +118,55 @@ function drawEarth(center, now) {
   ctx.translate(center.x, center.y + bobY);
   ctx.scale(pulse, pulse);
 
-  const glow = ctx.createRadialGradient(0, 0, earthSize * 0.1, 0, 0, earthSize * 0.95);
-  glow.addColorStop(0, 'rgba(150, 245, 255, 0.32)');
-  glow.addColorStop(0.5, 'rgba(95, 150, 255, 0.16)');
+  // soft cosmic bloom behind the globe, in the same violet/cyan palette as the
+  // nebula stars so the photo doesn't feel pasted onto the illustrated scene
+  const glow = ctx.createRadialGradient(0, 0, earthSize * 0.15, 0, 0, earthSize * 1.15);
+  glow.addColorStop(0, 'rgba(160, 200, 255, 0.30)');
+  glow.addColorStop(0.45, 'rgba(140, 120, 255, 0.20)');
   glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
   ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.arc(0, 0, earthSize * 0.95, 0, Math.PI * 2);
+  ctx.arc(0, 0, earthSize * 1.15, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.drawImage(earthImage, -earthSize / 2, -earthSize / 2, earthSize, earthSize);
+
+  // tint the globe toward the scene's violet/blue palette so it reads as part
+  // of the same world instead of a flat photo dropped on top
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(0, 0, earthSize / 2, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.globalCompositeOperation = 'soft-light';
+  const tint = ctx.createRadialGradient(-earthSize * 0.15, -earthSize * 0.18, earthSize * 0.05, 0, 0, earthSize * 0.6);
+  tint.addColorStop(0, 'rgba(180, 160, 255, 0)');
+  tint.addColorStop(0.7, 'rgba(150, 120, 255, 0.22)');
+  tint.addColorStop(1, 'rgba(100, 70, 210, 0.4)');
+  ctx.fillStyle = tint;
+  ctx.fillRect(-earthSize / 2, -earthSize / 2, earthSize, earthSize);
+  ctx.restore();
+
+  // thin glowing atmosphere rim to match the twinkling star glow style
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  const rimWidth = earthSize * 0.015;
+  ctx.strokeStyle = 'rgba(160, 205, 255, 0.55)';
+  ctx.lineWidth = rimWidth;
+  ctx.beginPath();
+  ctx.arc(0, 0, earthSize / 2 - rimWidth / 2, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+
   ctx.restore();
 }
 
 function draw(now) {
   ctx.clearRect(0, 0, W, H);
 
-  // deep space gradient
-  const g = ctx.createRadialGradient(W * 0.5, H * 0.34, 0, W * 0.5, H * 0.34, Math.max(W, H) * 0.75);
+  const center = nebulaCenter();
+
+  // deep space gradient, centered on the same point as the globe
+  const g = ctx.createRadialGradient(center.x, center.y, 0, center.x, center.y, Math.max(W, H) * 0.75);
   g.addColorStop(0, 'rgba(60,30,110,0.35)');
   g.addColorStop(0.5, 'rgba(15,10,35,0.15)');
   g.addColorStop(1, 'rgba(5,6,15,0)');
@@ -152,7 +183,6 @@ function draw(now) {
   });
 
   // persistent nebula stars, slowly orbiting
-  const center = nebulaCenter();
   drawEarth(center, now);
   nebulaStars.forEach(s => {
     const ang = s.baseAngle + now * s.angularSpeed;
