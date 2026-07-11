@@ -110,7 +110,7 @@ function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 function drawEarth(center, now) {
   if (!earthImage.complete) return;
 
-  const earthSize = Math.min(W, H) * 0.48;
+  const earthSize = Math.min(W, H) * 0.64;
   const bobY = Math.sin(now * 0.0007) * 4;
   const pulse = 1 + Math.sin(now * 0.0011) * 0.004;
 
