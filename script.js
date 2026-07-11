@@ -40,6 +40,19 @@ function nebulaCenter() {
   return { x: W * 0.5, y: H * 0.5 };
 }
 
+// the settled stars form a flattened ring around the globe, like Saturn's
+// rings, instead of a filled cloud
+const RING_FLATTEN = 0.32;
+function earthRadius() {
+  return Math.min(W, H) * 0.64 / 2;
+}
+function ringBand() {
+  const r = earthRadius();
+  const inner = r * 1.18;
+  const width = r * (0.35 + Math.min(0.55, totalChars * 0.0035));
+  return { inner, width };
+}
+
 // ---------- active flying particles ----------
 let particles = [];
 
@@ -53,15 +66,15 @@ function launch() {
   const chars = [...text].filter(c => c.trim().length > 0);
   const rect = input.getBoundingClientRect();
   const center = nebulaCenter();
-  const spread = 40 + Math.min(260, totalChars * 0.5);
+  const { inner, width } = ringBand();
 
   chars.forEach((ch, i) => {
     const startX = rect.left + rect.width * (0.15 + 0.7 * Math.random());
     const startY = rect.top + rect.height * 0.4;
     const angle = Math.random() * Math.PI * 2;
-    const radius = Math.random() * spread + 20;
+    const radius = inner + Math.random() * width;
     const targetX = center.x + Math.cos(angle) * radius;
-    const targetY = center.y + Math.sin(angle) * radius * 0.55;
+    const targetY = center.y + Math.sin(angle) * radius * RING_FLATTEN;
 
     const ctrlX = (startX + targetX) / 2 + (Math.random() - 0.5) * 260;
     const ctrlY = Math.min(startY, targetY) - 160 - Math.random() * 180;
@@ -153,12 +166,13 @@ function draw(now) {
     ctx.fill();
   });
 
-  // persistent nebula stars, slowly orbiting
-  drawEarth(center, now);
-  nebulaStars.forEach(s => {
+  // persistent nebula stars form a ring around the globe; the half of the
+  // ring that's "behind" the globe is drawn first, then the globe, then the
+  // near half on top, so the ring appears to pass behind the planet
+  const drawRingStar = s => {
     const ang = s.baseAngle + now * s.angularSpeed;
     const x = center.x + Math.cos(ang) * s.radius;
-    const y = center.y + Math.sin(ang) * s.radius * 0.55;
+    const y = center.y + Math.sin(ang) * s.radius * RING_FLATTEN;
     const twinkle = 0.7 + 0.3 * Math.sin(now * 0.002 + s.baseAngle * 5);
     ctx.save();
     ctx.globalAlpha = twinkle;
@@ -169,6 +183,15 @@ function draw(now) {
     ctx.arc(x, y, s.size, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
+    return ang;
+  };
+
+  nebulaStars.forEach(s => {
+    if (Math.sin(s.baseAngle + now * s.angularSpeed) < 0) drawRingStar(s);
+  });
+  drawEarth(center, now);
+  nebulaStars.forEach(s => {
+    if (Math.sin(s.baseAngle + now * s.angularSpeed) >= 0) drawRingStar(s);
   });
 
   // active flying particles
